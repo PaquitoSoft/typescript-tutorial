@@ -7,14 +7,6 @@ type Validatable = {
 	max?: number;
 };
 
-// type Project = {
-// 	id: string;
-// 	type: "active" | "finished";
-// 	title: string;
-// 	description: string;
-// 	people: number;
-// };
-
 function validate(validatableInput: Validatable): boolean {
 	const { value } = validatableInput;
 	let isValid = true;
@@ -22,17 +14,17 @@ function validate(validatableInput: Validatable): boolean {
 	if (validatableInput.required) {
 		isValid = isValid && value.toString().trim().length !== 0;
 	}
-	if (validatableInput.minLength !== undefined && typeof value === "string") {
-		isValid = isValid && value.trim().length > validatableInput.minLength;
+	if (validatableInput.minLength !== undefined && typeof value === 'string') {
+		isValid = isValid && value.trim().length >= validatableInput.minLength;
 	}
-	if (validatableInput.maxLength !== undefined && typeof value === "string") {
-		isValid = isValid && value.trim().length < validatableInput.maxLength;
+	if (validatableInput.maxLength !== undefined && typeof value === 'string') {
+		isValid = isValid && value.trim().length <= validatableInput.maxLength;
 	}
-	if (validatableInput.min !== undefined && typeof value === "number") {
-		isValid = isValid && value > validatableInput.min;
+	if (validatableInput.min !== undefined && typeof value === 'number') {
+		isValid = isValid && value >= validatableInput.min;
 	}
-	if (validatableInput.max !== undefined && typeof value === "number") {
-		isValid = isValid && value < validatableInput.max;
+	if (validatableInput.max !== undefined && typeof value === 'number') {
+		isValid = isValid && value <= validatableInput.max;
 	}
 
 	return isValid;
@@ -54,7 +46,7 @@ function Singleton<T extends { new (...args: any[]): {} }>(klass: T) {
 
 		private constructor(...args: any[]) {
 			super([...args]);
-			console.log("Building a singleton");
+			console.log('Building a singleton');
 		}
 
 		static getInstance() {
@@ -66,11 +58,22 @@ function Singleton<T extends { new (...args: any[]): {} }>(klass: T) {
 	};
 }
 
+interface Draggable {
+	dragStartHandler(event: DragEvent): void;
+	dragEndHandler(event: DragEvent): void;
+}
+
+interface DragTarget {
+	dragOverHandler(event: DragEvent): void;
+	dropHandler(event: DragEvent): void;
+	dragLeaveHandler(event: DragEvent): void;
+}
+
 type Listener<T> = (items: T[]) => void;
 
 enum ProjectStatus {
-	ACTIVE = "active",
-	FINISHED = "finished"
+	ACTIVE = 'active',
+	FINISHED = 'finished'
 }
 
 class Project {
@@ -93,16 +96,30 @@ class State<T> {
 
 class ProjectState extends State<Project> {
 	private projects: Project[] = [];
-	// private listeners: Listener[] = [];
 	private static instance: ProjectState;
 
-	private constructor() { super(); }
+	private constructor() {
+		super();
+	}
 
 	static getInstance() {
 		if (!this.instance) {
 			this.instance = new ProjectState();
 		}
 		return this.instance;
+	}
+
+	private updateListeners() {
+		for (const listener of this.listeners) {
+			try {
+				listener([...this.projects]);
+			} catch (error) {
+				console.error(
+					'Error executing one project state listener:',
+					error
+				);
+			}
+		}
 	}
 
 	addProject(title: string, description: string, people: number) {
@@ -115,21 +132,16 @@ class ProjectState extends State<Project> {
 		);
 		this.projects.push(newProject);
 
-		for (const listener of this.listeners) {
-			try {
-				listener([...this.projects]);
-			} catch (error) {
-				console.error(
-					"Error executing one project state listener:",
-					error
-				);
-			}
-		}
+		this.updateListeners();
 	}
 
-	// onStateUpdate(listener: Listener) {
-	// 	this.listeners.push(listener);
-	// }
+	moveProject(projectId: string, newStatus: ProjectStatus) {
+		const project = this.projects.find((p) => p.id === projectId);
+		if (project && project.status !== newStatus) {
+			project.status = newStatus;
+			this.updateListeners();
+		}
+	}
 }
 
 const appState = ProjectState.getInstance();
@@ -162,7 +174,7 @@ abstract class ViewComponent<T extends HTMLElement, U extends HTMLElement> {
 		}
 
 		this.attach();
-		// If we call these methods right away, the constructor of the extended class 
+		// If we call these methods right away, the constructor of the extended class
 		// would not be fully executed (only the 'super' part) so maybe some od its initialization
 		// wouldn't be done yet (ex: this.type in ProjectList class)
 		// We can move the execution of these methods to the constructor of every class
@@ -176,7 +188,7 @@ abstract class ViewComponent<T extends HTMLElement, U extends HTMLElement> {
 
 	private attach() {
 		this.$host.insertAdjacentElement(
-			this.insertAtStart ? "afterbegin" : "beforeend",
+			this.insertAtStart ? 'afterbegin' : 'beforeend',
 			this.$templateContent
 		);
 	}
@@ -185,95 +197,143 @@ abstract class ViewComponent<T extends HTMLElement, U extends HTMLElement> {
 	protected abstract renderContent(): void;
 }
 
-class ProjectList extends ViewComponent<HTMLDivElement, HTMLElement> {
-	// $template: HTMLTemplateElement;
-	// $host: HTMLElement;
-	// $templateContent: HTMLElement;
-	private type: ProjectStatus
+class ProjectItem
+	extends ViewComponent<HTMLUListElement, HTMLLIElement>
+	implements Draggable {
+	private project: Project;
+
+	constructor(hostId: string, project: Project) {
+		super('single-project', hostId, false, project.id);
+		this.project = project;
+	}
+
+	get persons() {
+		if (this.project.people === 1) {
+			return '1 person assigned.';
+		} else {
+			return `${this.project.people} persons assigned.`;
+		}
+	}
+
+	protected configure() {
+		this.$templateContent.addEventListener(
+			'dragstart',
+			this.dragStartHandler
+		);
+		this.$templateContent.addEventListener('dragend', this.dragEndHandler);
+	}
+
+	protected renderContent() {
+		this.$templateContent.querySelector(
+			'h2'
+		)!.textContent = this.project.title;
+		this.$templateContent.querySelector('h3')!.textContent = this.persons;
+		this.$templateContent.querySelector(
+			'p'
+		)!.textContent = this.project.description;
+	}
+
+	@Autobind
+	dragStartHandler(event: DragEvent) {
+		event.dataTransfer!.setData('text/plain', this.project.id);
+		event.dataTransfer!.effectAllowed = 'move';
+	}
+
+	@Autobind
+	dragEndHandler(event: DragEvent) {
+		console.log('Drag End event:', event);
+	}
+}
+
+class ProjectList
+	extends ViewComponent<HTMLDivElement, HTMLElement>
+	implements DragTarget {
+	private type: ProjectStatus;
 
 	constructor(type: ProjectStatus) {
 		super('project-list', 'app', false, `${type}-projects`);
 		this.type = type;
-		// this.$template = document.getElementById(
-		// 	"project-list"
-		// ) as HTMLTemplateElement;
-		// this.$host = document.getElementById("app")!;
-
-		// const importedTemplate = document.importNode(
-		// 	this.$template.content,
-		// 	true
-		// );
-		// this.$templateContent = importedTemplate.firstElementChild as HTMLFormElement;
-		// this.$templateContent.id = `${this.type}-projects`;
-		// this.attach();
-		// this.renderContent();
-		// appState.onStateUpdate(this.renderContent);
 	}
 
-	// private attach() {
-	// 	this.$host.insertAdjacentElement("beforeend", this.$templateContent);
-	// }
-
 	protected configure() {
-		appState.onStateUpdate((projects: Project[]) => this.renderContent(projects));
+		this.$templateContent.addEventListener(
+			'dragover',
+			this.dragOverHandler
+		);
+		this.$templateContent.addEventListener(
+			'dragleave',
+			this.dragLeaveHandler
+		);
+		this.$templateContent.addEventListener('drop', this.dropHandler);
+
+		appState.onStateUpdate((projects: Project[]) =>
+			this.renderContent(projects)
+		);
 	}
 
 	@Autobind
 	protected renderContent(projects: Project[] = []) {
-		const $list = this.$templateContent.querySelector("ul")!;
+		const $list = this.$templateContent.querySelector('ul')!;
 		const filteredProjects = projects.filter(
 			(project) => project.status === this.type
 		);
 		$list.id = `${this.type}-projects-list`;
 		this.$templateContent.querySelector(
-			"h2"
+			'h2'
 		)!.textContent = `${this.type.toUpperCase()} PROJECTS (${
 			filteredProjects.length
 		})`;
 
-		$list.innerHTML = "";
+		$list.innerHTML = '';
 		for (const project of filteredProjects) {
-			const $project = document.createElement("li");
-			$project.textContent = project.title;
-			$list.appendChild($project);
+			new ProjectItem($list.id, project);
 		}
+	}
+
+	@Autobind
+	dragOverHandler(event: DragEvent) {
+		if (event.dataTransfer?.types[0] === 'text/plain') {
+			event.preventDefault();
+			const $list = this.$templateContent.querySelector('ul')!;
+			$list.classList.add('droppable');
+		}
+	}
+
+	@Autobind
+	dropHandler(event: DragEvent) {
+		const projectId = event.dataTransfer!.getData('text/plain');
+		appState.moveProject(
+			projectId,
+			this.type === ProjectStatus.ACTIVE
+				? ProjectStatus.ACTIVE
+				: ProjectStatus.FINISHED
+		);
+	}
+
+	@Autobind
+	dragLeaveHandler(event: DragEvent) {
+		const $list = this.$templateContent.querySelector('ul')!;
+		$list.classList.remove('droppable');
 	}
 }
 
 class ProjectInput extends ViewComponent<HTMLDivElement, HTMLFormElement> {
-	// $template: HTMLTemplateElement;
-	// $host: HTMLElement;
-	// $templateContent: HTMLFormElement;
 	$title: HTMLInputElement;
 	$description: HTMLInputElement;
 	$people: HTMLInputElement;
 
 	constructor() {
 		super('project-input', 'app', true, 'user-input');
-		// this.$template = document.getElementById(
-		// 	"project-input"
-		// ) as HTMLTemplateElement;
-		// this.$host = document.getElementById("app")!;
-
-		// const importedTemplate = document.importNode(
-		// 	this.$template.content,
-		// 	true
-		// );
-		// this.$templateContent = importedTemplate.firstElementChild as HTMLFormElement;
-		// this.$templateContent.id = "user-input";
 
 		this.$title = this.$templateContent.querySelector(
-			"#title"
+			'#title'
 		) as HTMLInputElement;
 		this.$description = this.$templateContent.querySelector(
-			"#description"
+			'#description'
 		) as HTMLInputElement;
 		this.$people = this.$templateContent.querySelector(
-			"#people"
+			'#people'
 		) as HTMLInputElement;
-
-		// this.configure();
-		// this.attach();
 	}
 
 	private gatherUserInput(): [string, string, number] {
@@ -295,7 +355,7 @@ class ProjectInput extends ViewComponent<HTMLDivElement, HTMLFormElement> {
 		) {
 			return [title, description, people];
 		} else {
-			throw new Error("Invalid input!");
+			throw new Error('Invalid input!');
 		}
 	}
 
@@ -313,17 +373,51 @@ class ProjectInput extends ViewComponent<HTMLDivElement, HTMLFormElement> {
 	}
 
 	protected configure() {
-		this.$templateContent.addEventListener("submit", this.submitHandler);
+		this.$templateContent.addEventListener('submit', this.submitHandler);
 	}
 
 	protected renderContent() {}
-
-	// private attach() {
-	// 	this.$host.insertAdjacentElement("afterbegin", this.$templateContent);
-	// }
-
 }
 
 const projectInput1 = new ProjectInput();
 const activeProjectsList = new ProjectList(ProjectStatus.ACTIVE);
 const finishedProjectsList = new ProjectList(ProjectStatus.FINISHED);
+
+/* ------------------------------------------------------------------------------------------ */
+
+const testProjects: any[] = [
+	{
+		title: 'Gipi',
+		description: 'Build a tool for post purchase management',
+		people: 2
+	},
+	{
+		title: 'CIS',
+		description:
+			'Build a tool for integrating warehouse stocks with online store',
+		people: 3
+	},
+	{
+		title: 'Logistics',
+		description:
+			'Build a tool for managing picking, packing and sending onlines orders to customers',
+		people: 5
+	}
+];
+
+interface Window {
+	appTools: any;
+}
+window.appTools = {
+	addProject() {
+		testProjects.unshift(testProjects.pop());
+		const project = testProjects[0];
+		(<HTMLInputElement>document.querySelector('form #title')).value =
+			project.title;
+		(<HTMLInputElement>document.querySelector('form #description')).value =
+			project.description;
+		(<HTMLInputElement>document.querySelector('form #people')).value =
+			project.people;
+		(<HTMLButtonElement>document.querySelector('form button')).click();
+	}
+};
