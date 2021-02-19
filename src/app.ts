@@ -1,53 +1,38 @@
-/*
-/// <reference path="./drag-and-drop-namespaces/models/dd-interfaces.ts" />
-/// <reference path="./drag-and-drop-namespaces/models/dd-models.ts" />
-/// <reference path="./drag-and-drop-namespaces/components/dd-project-input.ts" />
-/// <reference path="./drag-and-drop-namespaces/components/dd-project-list.ts" />
-*/
+import 'reflect-metadata';
+import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 
-import { ProjectInput } from './drag-and-drop-modules/components/dd-project-input';
-import { ProjectList } from './drag-and-drop-modules/components/dd-project-list';
-import { ProjectStatus } from './drag-and-drop-modules/models/dd-models';
+import _ from 'lodash';
+import { Vehicle } from './vehicle.model';
 
-new ProjectInput();
-new ProjectList(ProjectStatus.ACTIVE);
-new ProjectList(ProjectStatus.FINISHED);
+// Tell Typescript about a global variable 
+// (I set this in an inline script in the HTML file)
+declare var GLOBAL_VALUE: string;
 
-/* ------------------------------------------------------------------------------------------ */
+console.log(_.shuffle([1,2,3]));
 
-const testProjects: any[] = [
-	{
-		title: 'Gipi',
-		description: 'Build a tool for post purchase management',
-		people: 2
-	},
-	{
-		title: 'CIS',
-		description:
-			'Build a tool for integrating warehouse stocks with online store',
-		people: 3
-	},
-	{
-		title: 'Logistics',
-		description:
-			'Build a tool for managing picking, packing and sending onlines orders to customers',
-		people: 5
-	}
+console.log({ GLOBAL_VALUE });
+
+// const car = new Vehicle('Opel Astra', 16000);
+// console.log(car.getInformation());
+
+const vehiclesRaw = [
+	{ title: 'Seat Ibiza', price: 9000 },
+	{ title: 'Yamaha IBM', price: 1500 },
+	{ title: 'Suzuki GS500', price: 2000 },
+	{ title: 'Opel Astra', price: 16000 },
+	{ title: 'KTM Duke 200', price: 3000 },
+	{ title: 'Mercedes Clase A200', price: 36000 }
 ];
 
-declare global {
-	var appTools: any;
+// const vehicles = vehiclesRaw.map(v => new Vehicle(v.title, v.price));
+const vehicles = plainToClass(Vehicle, vehiclesRaw);
+
+for (const v of vehicles) {
+	console.log(v.getInformation());
 }
-window.appTools = {
-	addProject() {
-		testProjects.unshift(testProjects.pop());
-		const project = testProjects[0];
-		(<HTMLInputElement>document.querySelector('form #title')).value =
-			project.title;
-		(<HTMLInputElement>document.querySelector('form #description')).value =
-			project.description;
-		(<HTMLInputElement>document.querySelector('form #people')).value =
-			project.people;
-		(<HTMLButtonElement>document.querySelector('form button')).click();
-	}
-};
+
+const invalidVehicle = new Vehicle('', -100);
+validate(invalidVehicle).then(errors => {
+	console.log('Validation errors:', errors);
+});
