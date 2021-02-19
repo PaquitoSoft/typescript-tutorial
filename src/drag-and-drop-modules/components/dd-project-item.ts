@@ -1,7 +1,7 @@
-import { ViewComponent } from './dd-view-component.js';
-import { Draggable } from '../models/dd-interfaces.js';
-import { Project } from '../models/dd-models.js';
-import { Autobind } from '../decorators/dd-decorators.js';
+import { ViewComponent } from './dd-view-component';
+import { Draggable } from '../models/dd-interfaces';
+import { Project } from '../models/dd-models';
+import { Autobind } from '../decorators/dd-decorators';
 
 export class ProjectItem
 	extends ViewComponent<HTMLUListElement, HTMLLIElement>

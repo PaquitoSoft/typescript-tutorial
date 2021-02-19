@@ -1,9 +1,9 @@
-import { ViewComponent } from './dd-view-component.js';
-import { DragTarget } from '../models/dd-interfaces.js';
-import { Project, ProjectStatus } from '../models/dd-models.js';
-import { appState } from '../state/dd-state.js';
-import { Autobind } from '../decorators/dd-decorators.js';
-import { ProjectItem } from './dd-project-item.js';
+import { ViewComponent } from './dd-view-component';
+import { DragTarget } from '../models/dd-interfaces';
+import { Project, ProjectStatus } from '../models/dd-models';
+import { appState } from '../state/dd-state';
+import { Autobind } from '../decorators/dd-decorators';
+import { ProjectItem } from './dd-project-item';
 
 export class ProjectList
 	extends ViewComponent<HTMLDivElement, HTMLElement>

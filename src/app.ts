@@ -5,9 +5,9 @@
 /// <reference path="./drag-and-drop-namespaces/components/dd-project-list.ts" />
 */
 
-import { ProjectInput } from './drag-and-drop-modules/components/dd-project-input.js';
-import { ProjectList } from './drag-and-drop-modules/components/dd-project-list.js';
-import { ProjectStatus } from './drag-and-drop-modules/models/dd-models.js';
+import { ProjectInput } from './drag-and-drop-modules/components/dd-project-input';
+import { ProjectList } from './drag-and-drop-modules/components/dd-project-list';
+import { ProjectStatus } from './drag-and-drop-modules/models/dd-models';
 
 new ProjectInput();
 new ProjectList(ProjectStatus.ACTIVE);

@@ -1,7 +1,7 @@
-import { ViewComponent } from './dd-view-component.js';
-import { appState } from '../state/dd-state.js';
-import { Autobind } from '../decorators/dd-decorators.js';
-import { validate } from '../util/dd-validation.js';
+import { ViewComponent } from './dd-view-component';
+import { appState } from '../state/dd-state';
+import { Autobind } from '../decorators/dd-decorators';
+import { validate } from '../util/dd-validation';
 
 export class ProjectInput extends ViewComponent<
 	HTMLDivElement,

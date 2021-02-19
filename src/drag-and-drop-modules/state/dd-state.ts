@@ -1,4 +1,4 @@
-import { Project, ProjectStatus } from '../models/dd-models.js';
+import { Project, ProjectStatus } from '../models/dd-models';
 
 type Listener<T> = (items: T[]) => void;
 
