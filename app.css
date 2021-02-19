@@ -127,3 +127,22 @@ button:active {
   border: 1px solid #ff0062;
   background: #f7f7f7;
 }
+
+
+/* ------------------------------------------- */
+#map {
+  width: 90%;
+  height: 20rem;
+  border: 1px solid #ccc;
+  margin: 2rem auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.address-form {
+  width: 90%;
+  text-align: center;
+  margin: 2rem auto;
+}

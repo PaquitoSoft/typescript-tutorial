@@ -1,38 +1,64 @@
-import 'reflect-metadata';
-import { plainToClass } from 'class-transformer';
-import { validate } from 'class-validator';
+import axios from 'axios';
 
-import _ from 'lodash';
-import { Vehicle } from './vehicle.model';
+// declare var google: any;
+declare var ol: any;
 
-// Tell Typescript about a global variable 
-// (I set this in an inline script in the HTML file)
-declare var GLOBAL_VALUE: string;
+// type GeocodeResult = {
+// 	status: 'OK' | 'ZERO_RESULTS';
+// 	results: {
+// 		geometry: {
+// 			location: {
+// 				lat: number,
+// 				lng: number
+// 			}
+// 		}
+// 	}[]
+// };
 
-console.log(_.shuffle([1,2,3]));
+const $map = document.getElementById('map') as HTMLElement;
+const $addressForm = document.querySelector('.address-form') as HTMLFormElement;
+const $addressInput = document.querySelector(
+	'[name="address"]'
+) as HTMLInputElement;
 
-console.log({ GLOBAL_VALUE });
+const GOOGLE_API_KEY = 'GOOGLE_API_KEY';
 
-// const car = new Vehicle('Opel Astra', 16000);
-// console.log(car.getInformation());
+async function searchAddressHandler(event: Event) {
+	event.preventDefault();
+	// const address = $addressInput.value;
 
-const vehiclesRaw = [
-	{ title: 'Seat Ibiza', price: 9000 },
-	{ title: 'Yamaha IBM', price: 1500 },
-	{ title: 'Suzuki GS500', price: 2000 },
-	{ title: 'Opel Astra', price: 16000 },
-	{ title: 'KTM Duke 200', price: 3000 },
-	{ title: 'Mercedes Clase A200', price: 36000 }
-];
+	// const response = await axios.get<GeocodeResult>(
+	// 	`https://maps.googleapis.com/api/geocode/json?key=${GOOGLE_API_KEY}&address=${encodeURIComponent(
+	// 		address
+	// 	)}`
+	// );
 
-// const vehicles = vehiclesRaw.map(v => new Vehicle(v.title, v.price));
-const vehicles = plainToClass(Vehicle, vehiclesRaw);
+	// if (response.data.status === 'OK') {
+	// 	console.log({ response });
+	// 	const coordinates = response.data.results[0].geometry.location;
+	// 	const map = new google.maps.Map($map, {
+	// 		center: coordinates,
+	// 		zoom: 8
+	// 	});
 
-for (const v of vehicles) {
-	console.log(v.getInformation());
+	// 	const marker = new google.maps.Marker({ position: coordinates, map });
+	// } else {
+	// 	console.error('Response not ok:', response);
+	// }
+
+	const coordinates = { lat: 40.41, lng: -73.99 }; 
+	new ol.Map({
+		target: 'map',
+		layers: [
+			new ol.layer.Tile({
+				source: new ol.source.OSM()
+			})
+		],
+		view: new ol.View({
+			center: ol.proj.fromLonLat([coordinates.lng, coordinates.lat]),
+			zoom: 8
+		})
+	})
 }
 
-const invalidVehicle = new Vehicle('', -100);
-validate(invalidVehicle).then(errors => {
-	console.log('Validation errors:', errors);
-});
+$addressForm.addEventListener('submit', searchAddressHandler);

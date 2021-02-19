@@ -6,6 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>ProjectManager</title>
     <link rel="stylesheet" href="app.css" />
+	
+	<!-- OpenLayers Maps -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.1.1/css/ol.css" type="text/css">
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.1.1/build/ol.js"></script>
+	
 	<script>
 		const GLOBAL_VALUE = 'Rollo Tomassi';
 	</script>
@@ -45,5 +50,13 @@
       </section>
     </template>
     <div id="app"></div>
+
+	<div id="map">
+		<p>Please enter an address!</p>
+	</div>
+	<form class="address-form">
+		<input type="text" name="address" required placeholder="Type an address">
+		<button type="submit">Search address</button>
+	</form>
   </body>
 </html>

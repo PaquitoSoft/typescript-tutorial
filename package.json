@@ -11,6 +11,8 @@
   "author": "PaquitoSoft",
   "license": "ISC",
   "dependencies": {
+    "@types/googlemaps": "^3.43.3",
+    "axios": "^0.21.1",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.13.1",
     "concurrently": "^5.3.0",
